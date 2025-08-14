@@ -1,6 +1,3 @@
-#this is the working version of compser v2 after resorting from composer v3 on 2025-07-29
-
-
 import functions_framework
 import requests
 from datetime import datetime, timedelta, timezone
@@ -22,14 +19,14 @@ def main(request):
     bucket = storage_client.bucket(bucket_name)
 
     if now.day == 1:
-        #  FULL LOAD
+        # 🟢 FULL LOAD
         first_day_this_month = now.replace(day=1)
         last_month = first_day_this_month - timedelta(days=1)
         start_date = last_month.replace(day=1).strftime("%Y-%m-%d")
         url = f"https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime={start_date}"
         filename = f"whole_month_{last_month.strftime('%m')}.csv"
     else:
-        #  DELTA LOAD
+        # 🔁 DELTA LOAD
         url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.csv"
         timestamp = now.strftime("%Y%m%d-%H%M%S")
         filename = f"all_day_{timestamp}.csv"
@@ -57,21 +54,23 @@ def main(request):
     credentials.refresh(Request())
 
     dag_trigger_url = (
-        "https://ecd3b5c7441c47cda36677811640c176-dot-us-central1.composer.googleusercontent.com"
-        f"/api/v1/dags/{dag_id}/dagRuns"
+        "https://composer.googleapis.com/v1/projects/imp-fyp/locations/us-central1/environments/load-orchestrator-v3/dags/load_pipeline_controller:trigger
+"
+        
     )
 
     headers = {
-        "Authorization": f"Bearer {credentials.token}",
-        "Content-Type": "application/json"
+    "Authorization": f"Bearer {credentials.token}",
+    "Content-Type": "application/json"
     }
 
     payload = {
-        "dag_run_id": dag_run_id,
-        "conf": {
-            "filename": filename
-        }
+    "executionId": dag_run_id,   # similar to dag_run_id in Composer 2
+    "conf": {
+        "filename": filename
     }
+    }
+
 
     try:
         dag_response = requests.post(dag_trigger_url, headers=headers, json=payload)
