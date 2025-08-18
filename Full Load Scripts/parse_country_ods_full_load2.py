@@ -29,7 +29,7 @@ class _AttachJobId(beam.DoFn):
             or "LOCAL_RUN"
         )
     def process(self, element):
-        element["_LB_job_execution_id"] = self.job_id   # overwrite/insert
+        element["_LB_job_execution_id"] = self.job_id  
         yield element
 
 
@@ -38,13 +38,13 @@ class ParsePlaceDoFn(beam.DoFn):
         place = row.get("LB_place", "")
         updated_row = dict(row)
 
-        # ✅ Set insertion & updated timestamps (EEST, as datetime objects)
+       
         eest = pytz.timezone('Europe/Bucharest')
         now_eest = datetime.now(pytz.utc).astimezone(eest).replace(tzinfo=None)
 
         updated_row["_DT_insertion_date"] = now_eest
 
-        # Default to null for both
+       
         updated_row["LB_Region"] = None
         updated_row["LB_Country"] = None
 

@@ -32,7 +32,7 @@ class _AttachJobId(beam.DoFn):
             or "LOCAL_RUN"
         )
     def process(self, element):
-        element["_LB_job_execution_id"] = self.job_id   # overwrite/insert
+        element["_LB_job_execution_id"] = self.job_id 
         yield element
         
 
@@ -75,7 +75,7 @@ class TransformToODS(beam.DoFn):
             vl_n_depth = depth + 0.5 * depth_error if (depth is not None and depth_error is not None) else depth
             vl_n_mag = mag + 0.5 * mag_error if (mag is not None and mag_error is not None) else mag
 
-            # Depth category
+            
             depth_cat = None
             if vl_n_depth is not None:
                 if vl_n_depth <= 70:
@@ -85,7 +85,6 @@ class TransformToODS(beam.DoFn):
                 else:
                     depth_cat = "Deep"
 
-            # Magnitude category
             mag_cat = None
             if vl_n_mag is not None:
                 if vl_n_mag < 3:

@@ -15,14 +15,14 @@ from apache_beam.io.gcp import gce_metadata_util
 # ───────────── CONFIG ─────────────
 PROJECT_ID     = 'imp-fyp'
 DATASET        = 'ODS_ds'
-INPUT_TABLE    = 'ods_day_earthquake'       # source (already enriched with mag/depth etc.)
-OUTPUT_TABLE   = 'T_ODS_day_earthquake'     # destination (delta-load target)
+INPUT_TABLE    = 'ods_day_earthquake'      
+OUTPUT_TABLE   = 'T_ODS_day_earthquake'     
 STATES_TABLE   = '50-US-States'
 REGION         = 'us-central1'
 INTERMEDIATE_BUCKET = 'dataflow-intermediate-bucket'
 # ──────────────────────────────────
 
-# ───────────── JOB-ID helper ───────
+
 class _AttachJobId(beam.DoFn):
     def setup(self):
         self.job_id = (
@@ -36,7 +36,7 @@ class _AttachJobId(beam.DoFn):
         element["_LB_job_execution_id"] = self.job_id
         yield element
 
-# ───────────── Place → Region/Country ─────────────
+
 class ParsePlaceDoFn(beam.DoFn):
     def __init__(self):
         self.rows_in   = Metrics.counter('parse', 'rows_in')
@@ -48,14 +48,14 @@ class ParsePlaceDoFn(beam.DoFn):
 
         place = updated_row.get("LB_place", "")
 
-        # set insertion & updated timestamp (EEST, always now)
+
         eest = pytz.timezone('Europe/Bucharest')
         now_eest = datetime.now(pytz.utc).astimezone(eest).replace(tzinfo=None)
 
         updated_row["_DT_insertion_date"] = now_eest
         updated_row["_DT_updated_date"]   = None 
 
-        # default nulls
+
         updated_row["LB_Region"]  = None
         updated_row["LB_Country"] = None
 
@@ -64,7 +64,7 @@ class ParsePlaceDoFn(beam.DoFn):
                 updated_row["LB_Region"] = place.strip()
             else:
                 left, right = place.rsplit(",", 1)
-                rl = right.strip()                   # candidate US state or non-US country
+                rl = right.strip()                   
                 state_match = states_dict.get(rl)
                 if state_match:
                     updated_row["LB_Region"]  = state_match
@@ -78,7 +78,7 @@ class ParsePlaceDoFn(beam.DoFn):
         self.rows_out.inc()
         yield updated_row
 
-# ───────────── Deduplicate step ─────────────
+# Handling Duplicates
 class DropExistingIds(beam.DoFn):
     def __init__(self):
         self.dup   = Metrics.counter('parse', 'rows_filtered')
@@ -86,12 +86,12 @@ class DropExistingIds(beam.DoFn):
 
     def process(self, element, existing_ids):
         if element['ID_Event'] in existing_ids:
-            self.dup.inc()           # already present → skip
+            self.dup.inc()           
         else:
             self.write.inc()
             yield element
 
-# ───────────── Pipeline ─────────────
+# Pipeline
 def run(argv=None):
     EEST = timezone(timedelta(hours=3))
     print(f"Pipeline execution STARTED at {datetime.now(EEST).strftime('%H:%M:%S')} EEST")
@@ -108,7 +108,7 @@ def run(argv=None):
 
     with beam.Pipeline(options=options) as p:
 
-        # --- US-states lookup table → dict side-input -----------------
+        
         states_dict = AsDict(
             p
             | 'Read US States' >> ReadFromBigQuery(
@@ -121,7 +121,7 @@ def run(argv=None):
                 ])
         )
 
-        # --- snapshot existing ID_Event keys from OUTPUT table -------
+
         existing_ids = (
             p
             | 'Read Existing IDs' >> ReadFromBigQuery(
@@ -131,7 +131,6 @@ def run(argv=None):
         )
         id_side = beam.pvalue.AsList(existing_ids)
 
-        # --- main flow ----------------------------------------------
         (
             p
             | 'Read INPUT ODS' >> ReadFromBigQuery(

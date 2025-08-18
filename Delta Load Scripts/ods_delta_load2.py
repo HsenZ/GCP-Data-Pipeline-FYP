@@ -12,10 +12,9 @@ PROJECT_ID       = 'imp-fyp'
 STAGING_DATASET  = 'STG_ds'
 STAGING_TABLE    = 'T_STG_day_earthquake'
 ODS_DATASET      = 'ODS_ds'
-ODS_TABLE        = 'ods_day_earthquake'          # the table you want to append to
+ODS_TABLE        = 'ods_day_earthquake'        
 EEST             = pytz.timezone('Europe/Bucharest')
 
-# ─── deterministic INT64 key helper ───────────────────────────────
 MASK63 = 0x7FFFFFFFFFFFFFFF           # 2^63-1  (fits BigQuery INT64)
 is_updated = False
 
@@ -33,13 +32,13 @@ def to_eest_datetime_str(iso_ts):
     to 'YYYY-MM-DD HH:MM:SS' in Europe/Bucharest time.
     """
     try:
-        dt = parser.isoparse(iso_ts)           # aware datetime
-        dt = dt.astimezone(EEST)               # convert tz
+        dt = parser.isoparse(iso_ts)           
+        dt = dt.astimezone(EEST)               
         return dt.strftime("%Y-%m-%d %H:%M:%S")
     except Exception:
         return None
 
-# ─── job-ID DoFn ──────────────────────────────────────────────────
+# job-ID DoFn
 class _AttachJobId(beam.DoFn):
     def setup(self):
         self.job_id = (
@@ -53,7 +52,7 @@ class _AttachJobId(beam.DoFn):
         element["_LB_job_execution_id"] = self.job_id
         yield element
 
-# ─── Transform from staging schema to ODS row ─────────────────────
+# Transform from staging schema to ODS row 
 class TransformToODS(beam.DoFn):
     def __init__(self, job_timestamp):
         self.job_timestamp = job_timestamp
@@ -112,9 +111,9 @@ class TransformToODS(beam.DoFn):
             updated_time = datetime.now(pytz.utc).astimezone(eest).replace(tzinfo=None)
             insertion_date = datetime.now(pytz.utc).astimezone(eest).replace(tzinfo=None)
 
-            self.rows_in.inc()  # metric
+            self.rows_in.inc() 
             yield {
-                'ID_Event'           : stable_id(dt_time, lat_raw, lon_raw),     # deterministic ID
+                'ID_Event'           : stable_id(dt_time, lat_raw, lon_raw),    
                 'VL_n_mag'           : vl_n_mag,
                 'LB_magCategory'     : mag_cat,
                 'VL_n_depth'         : vl_n_depth,
@@ -143,7 +142,7 @@ class TransformToODS(beam.DoFn):
         except Exception as e:
             logging.warning("Skipping row due to error: %s", e)
 
-# ─── Deduplicate step with metrics ─────────────────────────────────
+#  Deduplicate step with metrics 
 class DeduplicateById(beam.DoFn):
     def __init__(self):
         self.dup   = Metrics.counter('ods', 'rows_filtered')
@@ -156,7 +155,7 @@ class DeduplicateById(beam.DoFn):
             self.writt.inc()
             yield element
 
-# ─── main pipeline ────────────────────────────────────────────────
+#  main pipeline 
 def run(argv=None):
     EEST = timezone(timedelta(hours=3))
     print(f"Pipeline execution STARTED at {datetime.now(EEST).strftime('%H:%M:%S')} EEST")

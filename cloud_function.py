@@ -1,6 +1,3 @@
-#this is the working version of compser v2 after resorting from composer v3 on 2025-07-29
-
-
 import functions_framework
 import requests
 from datetime import datetime, timedelta, timezone
@@ -10,7 +7,6 @@ from google.auth import default
 import uuid
 import time
 
-# HTTP entrypoint
 @functions_framework.http
 def main(request):
     # Setup timezone (UTC+3)
@@ -22,14 +18,14 @@ def main(request):
     bucket = storage_client.bucket(bucket_name)
 
     if now.day == 1:
-        # 🟢 FULL LOAD
+        # FULL LOAD
         first_day_this_month = now.replace(day=1)
         last_month = first_day_this_month - timedelta(days=1)
         start_date = last_month.replace(day=1).strftime("%Y-%m-%d")
         url = f"https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime={start_date}"
         filename = f"whole_month_{last_month.strftime('%m')}.csv"
     else:
-        # 🔁 DELTA LOAD
+        # DELTA LOAD
         url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.csv"
         timestamp = now.strftime("%Y%m%d-%H%M%S")
         filename = f"all_day_{timestamp}.csv"
@@ -45,7 +41,7 @@ def main(request):
     bucket.blob(object_name).upload_from_string(resp.text, content_type="text/csv")
     print(f"Uploaded {filename} to GCS")
 
-    # Optional wait
+    # Precaution wait
     print("Waiting 2 minutes before triggering DAG...")
     time.sleep(120)
 

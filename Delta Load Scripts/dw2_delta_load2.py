@@ -6,7 +6,7 @@ from apache_beam.io.gcp.bigquery import (
     ReadFromBigQuery, WriteToBigQuery, BigQueryDisposition
 )
 from apache_beam.transforms.util import Flatten
-import datetime as dt           # timezone-aware
+import datetime as dt          
 from datetime import datetime, timedelta, timezone
 import pytz
 from dateutil import parser
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 is_updated = False
 
-# ────────── HELPERS ────────────────────────────────────────────────
+#  HELPERS 
 def assign_ids(elements, start_id=1):
     for idx, val in enumerate(sorted(elements), start=start_id):
         yield (val, idx)
@@ -66,7 +66,7 @@ def get_mag_description(name):
         'Great'   : '8 ≤ mag'
     }.get(name, f"Magnitude category: {name}")
 
-# ────────── BigQuery utility — current max surrogate-key ───────────
+#  BigQuery utility — current max surrogate-key 
 bq_client = bigquery.Client(project=PROJECT_ID)
 def _get_max_id(table_name, id_col):
     sql = f"SELECT MAX({id_col}) AS max_id FROM `{PROJECT_ID}.{DW_DATASET}.{table_name}`"
@@ -79,14 +79,14 @@ def _ensure_staging_table():
     main_tbl_id = f"{PROJECT_ID}.{DW_DATASET}.T_FACT_Events"
     stage_tbl_id = f"{PROJECT_ID}.{DW_DATASET}.T_FACT_Events_staging"
     try:
-        bq_client.get_table(stage_tbl_id)             # already there
+        bq_client.get_table(stage_tbl_id)             
     except NotFound:
         main_tbl = bq_client.get_table(main_tbl_id)
         table = bigquery.Table(stage_tbl_id, schema=main_tbl.schema)
         bq_client.create_table(table)
         logging.info("Created staging table with cloned schema.")
 
-# ────────── DoFn to attach Dataflow job-ID ─────────────────────────
+#  DoFn to attach Dataflow job-ID 
 class _AttachJobId(beam.DoFn):
     def setup(self):
         self.job_id = (
@@ -100,7 +100,7 @@ class _AttachJobId(beam.DoFn):
         element["_LB_job_execution_id"] = self.job_id
         yield element
 
-# ────────── One-shot MERGE for the Fact table ──────────────────────
+#  One-shot MERGE for the Fact table 
 def _merge_fact_table():
     merge_sql = f"""
     MERGE `{PROJECT_ID}.{DW_DATASET}.T_FACT_Events` T
@@ -133,19 +133,19 @@ def _merge_fact_table():
     bq_client.query(merge_sql).result()
     logging.info("MERGE into T_FACT_Events finished.")
 
-# ────────── PIPELINE ───────────────────────────────────────────────
+#  PIPELINE 
 def run(argv=None):
     _ensure_staging_table()
     EEST = timezone(timedelta(hours=3))
     print(f"Pipeline execution STARTED at {datetime.now(EEST).strftime('%H:%M:%S')} EEST")
-    # ── snapshot current surrogate-key maxima
+    #  snapshot current surrogate-key maxima
     max_network_id        = _get_max_id("T_DIM_Network",           "ID_Network_ID")
     max_region_country_id = _get_max_id("T_DIM_RegionCountry",     "ID_RegionCountry_ID")
     max_type_id           = _get_max_id("T_DIM_Seismic_Activity_Type", "ID_type_ID")
     max_mag_id            = _get_max_id("T_DIM_magCategory",       "ID_magCategory_ID")
     max_depth_id          = _get_max_id("T_DIM_depthCategory",     "ID_depthCategory_ID")
 
-    # ── Beam / Dataflow options
+    #  Beam / Dataflow options
     options = PipelineOptions(argv)
     gco = options.view_as(GoogleCloudOptions)
     gco.project  = PROJECT_ID
@@ -158,12 +158,12 @@ def run(argv=None):
 
     p = beam.Pipeline(options=options)
 
-    # ────────── READ ODS ───────────────────────────────────────────
+    #  READ ODS 
     ods_rows = p | 'ReadODS' >> ReadFromBigQuery(
         table=f'{PROJECT_ID}:{ODS_DATASET}.T_ODS_day_earthquake',
         use_standard_sql=True)
 
-    # ────────── DIMENSION: Network ────────────────────────────────
+    #  DIMENSION: Network 
     existing_net = (
         p
         | 'ReadDimNetwork' >> ReadFromBigQuery(
@@ -192,7 +192,7 @@ def run(argv=None):
     all_net_kv = (existing_net_kv, new_net_kv) | 'AllNetKV' >> Flatten()
     full_net_map = beam.pvalue.AsDict(all_net_kv)
 
-    # ────────── DIMENSION: Region × Country ───────────────────────
+    #  DIMENSION: Region × Country 
     existing_reg = (
         p | 'ReadDimReg' >> ReadFromBigQuery(
             query=f"SELECT LB_Region, LB_Country, ID_RegionCountry_ID FROM `{PROJECT_ID}.{DW_DATASET}.T_DIM_RegionCountry`",
@@ -224,7 +224,7 @@ def run(argv=None):
     all_reg_kv = (existing_reg_kv, new_reg_kv) | 'AllRegKV' >> Flatten()
     full_reg_map = beam.pvalue.AsDict(all_reg_kv)
 
-    # ────────── DIMENSION: Type ───────────────────────────────────
+    #  DIMENSION: Type 
     existing_type = (
         p | 'ReadDimType' >> ReadFromBigQuery(
             query=f"SELECT LB_type, ID_type_ID FROM `{PROJECT_ID}.{DW_DATASET}.T_DIM_Seismic_Activity_Type`",
@@ -252,7 +252,7 @@ def run(argv=None):
     all_type_kv = (existing_type_kv, new_type_kv) | 'AllTypeKV' >> Flatten()
     full_type_map = beam.pvalue.AsDict(all_type_kv)
 
-    # ────────── DIMENSION: magCategory ────────────────────────────
+    #  DIMENSION: magCategory 
     existing_mag = (
         p | 'ReadDimMag' >> ReadFromBigQuery(
             query=f"SELECT LB_magCategoryName, ID_magCategory_ID FROM `{PROJECT_ID}.{DW_DATASET}.T_DIM_magCategory`",
@@ -284,7 +284,7 @@ def run(argv=None):
     all_mag_kv = (existing_mag_kv, new_mag_kv) | 'AllMagKV' >> Flatten()
     full_mag_map = beam.pvalue.AsDict(all_mag_kv)
 
-    # ────────── DIMENSION: depthCategory ──────────────────────────
+    #  DIMENSION: depthCategory 
     existing_depth = (
         p | 'ReadDimDepth' >> ReadFromBigQuery(
             query=f"SELECT LB_depthCategoryName, ID_depthCategory_ID FROM `{PROJECT_ID}.{DW_DATASET}.T_DIM_depthCategory`",
@@ -316,7 +316,7 @@ def run(argv=None):
     all_depth_kv = (existing_depth_kv, new_depth_kv) | 'AllDepthKV' >> Flatten()
     full_depth_map = beam.pvalue.AsDict(all_depth_kv)
 
-    # ────────── DIMENSION: Date (with AsList) ──────────────────────
+    #  DIMENSION: Date (with AsList) 
     existing_dates = (
         p | 'ReadDimDate' >> ReadFromBigQuery(
             query=f"SELECT DT_date FROM `{PROJECT_ID}.{DW_DATASET}.T_DIM_date`",
@@ -341,7 +341,7 @@ def run(argv=None):
                                                 write_disposition=BigQueryDisposition.WRITE_APPEND)
     )
 
-    # ────────── FACT TABLE  (to staging) ───────────────────────────
+    #  FACT TABLE  (to staging) 
     def enrich_fact(row, net_map, reg_map, type_map, mag_map, depth_map):
         eest = pytz.timezone('Europe/Bucharest')
         updated_time = datetime.now(pytz.utc).astimezone(eest).replace(tzinfo=None)
@@ -361,11 +361,7 @@ def run(argv=None):
             'ID_depthCategory_ID': depth_map.get(row['LB_depthCategory'] or 'Shallow'),
             'ID_magCategory_ID'  : mag_map.get(row['LB_magCategory'] or 'Not Felt'),
             'VL_n_mag'           : float(row['VL_n_mag'])  if row['VL_n_mag']  is not None else None,
-            # 'LB_magCategory'     : row['LB_magCategory'],
             'VL_n_depth'         : float(row['VL_n_depth'])if row['VL_n_depth']is not None else None,
-            # 'LB_depthCategory'   : row['LB_depthCategory'],
-            # 'LB_Region'          : row['LB_Region'],
-            # 'LB_Country'         : row['LB_Country'],
             'LB_place'           : row['LB_place'],
             'DT_time'            : dt_obj,
             'VL_latitude'        : float(row['VL_latitude'])  if row['VL_latitude']  is not None else None,
@@ -373,13 +369,8 @@ def run(argv=None):
             'ID_nst'             : int(row['ID_nst']) if row['ID_nst'] is not None else None,
             'ID_gap'             : int(row['ID_gap']) if row['ID_gap'] is not None else None,
             'VL_dmin'            : float(row['VL_dmin']) if row['VL_dmin'] is not None else None,
-            # 'LB_net'             : row['LB_net'],
-            # 'LB_type'            : row['LB_type'],
             'VL_horizontalError' : float(row['VL_horizontalError']) if row['VL_horizontalError'] is not None else None,
             'ID_magNst'          : int(row['ID_magNst']) if row['ID_magNst'] is not None else None,
-            # 'LB_status'          : row['LB_status'],
-            # 'LB_locationSource'  : row['LB_locationSource'],
-            # 'LB_magSource'       : row['LB_magSource'],
             '_DT_insertion_date': row['_DT_insertion_date'] if is_updated else insertion_date,
             '_DT_updated_date': updated_time if is_updated else None ,
             '_LB_data_source'    : row.get('_LB_data_source', 'T_ODS_day_earthquake')
@@ -406,12 +397,12 @@ def run(argv=None):
         custom_gcs_temp_location=f'gs://{INTERMEDIATE_BUCKET}/temp',
      )
 
-    # ── RUN ──
+    #  RUN 
     result = p.run()
     result.wait_until_finish()
     if str(result.state) == 'DONE':
         _merge_fact_table()
-        bq_client.delete_table(               #  ← NEW: drop the temp table
+        bq_client.delete_table(            
             f"{PROJECT_ID}.{DW_DATASET}.T_FACT_Events_staging",
             not_found_ok=True)
         

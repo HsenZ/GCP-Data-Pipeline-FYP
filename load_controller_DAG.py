@@ -15,7 +15,7 @@ def decide_branch(**kwargs):
 with models.DAG(
     dag_id="load_pipeline_controller",
     start_date=days_ago(1),
-    schedule_interval=None,  # Triggered by Cloud Run only
+    schedule_interval=None, 
     catchup=False,
     max_active_runs=1,
     tags=["conditional", "dataflow", "controller"],
@@ -35,7 +35,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -50,7 +50,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -65,7 +65,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -80,7 +80,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -96,7 +96,7 @@ with models.DAG(
         --runner DataflowRunner \
         --project imp-fyp \
         --region us-central1 \
-        --worker_machine_type=e2-standard-4 \
+        --worker_machine_type=n1-standard-8 \
         --max_num_workers=2 \
         --temp_location gs://dataflow-intermediate-bucket/temp \
         --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -113,7 +113,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -128,7 +128,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -143,7 +143,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -158,7 +158,7 @@ with models.DAG(
           --runner DataflowRunner \
           --project imp-fyp \
           --region us-central1 \
-          --worker_machine_type=e2-standard-4 \
+          --worker_machine_type=n1-standard-8 \
           --max_num_workers=2 \
           --temp_location gs://dataflow-intermediate-bucket/temp \
           --staging_location gs://dataflow-intermediate-bucket/staging \
@@ -174,7 +174,7 @@ with models.DAG(
         --runner DataflowRunner \
         --project imp-fyp \
         --region us-central1 \
-        --worker_machine_type=e2-standard-4 \
+        --worker_machine_type=n1-standard-8 \
         --max_num_workers=2 \
         --temp_location gs://dataflow-intermediate-bucket/temp \
         --staging_location gs://dataflow-intermediate-bucket/staging \

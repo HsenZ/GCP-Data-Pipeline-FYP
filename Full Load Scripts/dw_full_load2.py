@@ -6,7 +6,7 @@ import pytz
 from dateutil import parser
 import logging
 import os
-from apache_beam.io.gcp import gce_metadata_util    # NEW
+from apache_beam.io.gcp import gce_metadata_util   
 
 
 PROJECT_ID = 'imp-fyp'
@@ -31,7 +31,7 @@ class _AttachJobId(beam.DoFn):
             or "LOCAL_RUN"
         )
     def process(self, element):
-        element["_LB_job_execution_id"] = self.job_id   # overwrite/insert
+        element["_LB_job_execution_id"] = self.job_id  
         yield element
 
 def assign_ids(elements):
@@ -201,11 +201,7 @@ def run(argv=None):
                 'ID_depthCategory_ID': depth_map.get(row['LB_depthCategory'] or 'Shallow'),
                 'ID_magCategory_ID': mag_map.get(row['LB_magCategory'] or 'Not Felt'),
                 'VL_n_mag': float(row['VL_n_mag']) if row['VL_n_mag'] is not None else None,
-                # 'LB_magCategory': row['LB_magCategory'],
                 'VL_n_depth': float(row['VL_n_depth']) if row['VL_n_depth'] is not None else None,
-                # 'LB_depthCategory': row['LB_depthCategory'],
-                # 'LB_Region': row['LB_Region'],
-                # 'LB_Country': row['LB_Country'],
                 'LB_place': row['LB_place'],
                 'DT_time': dt_obj,
                 'VL_latitude': float(row['VL_latitude']) if row['VL_latitude'] is not None else None,
@@ -213,13 +209,8 @@ def run(argv=None):
                 'ID_nst': int(row['ID_nst']) if row['ID_nst'] is not None else None,
                 'ID_gap': int(row['ID_gap']) if row['ID_gap'] is not None else None,
                 'VL_dmin': float(row['VL_dmin']) if row['VL_dmin'] is not None else None,
-                # 'LB_net': row['LB_net'],
-                # 'LB_type': row['LB_type'],
                 'VL_horizontalError': float(row['VL_horizontalError']) if row['VL_horizontalError'] is not None else None,
                 'ID_magNst': int(row['ID_magNst']) if row['ID_magNst'] is not None else None,
-                # 'LB_status': row['LB_status'],
-                # 'LB_locationSource': row['LB_locationSource'],
-                # 'LB_magSource': row['LB_magSource'],
                 '_DT_insertion_date': row['_DT_insertion_date'] if is_updated else insertion_date,
                 '_DT_updated_date': updated_time if is_updated else None ,
                 '_LB_job_execution_id': job_execution_id,

@@ -29,7 +29,7 @@ class _AttachJobId(beam.DoFn):
             or "LOCAL_RUN"
         )
     def process(self, element):
-        element["job_execution_id"] = self.job_id        # overwrite/insert
+        element["job_execution_id"] = self.job_id     
         yield element
         
         

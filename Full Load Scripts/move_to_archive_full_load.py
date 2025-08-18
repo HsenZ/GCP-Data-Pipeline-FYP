@@ -17,7 +17,7 @@ def move_and_archive_file(metadata):
     source_path = metadata.path
     filename = os.path.basename(source_path)
 
-    # Extract month from filename: whole_month_MM.csv or whole_month_YYYYMM.csv
+    
     match = re.search(r'whole_month_(\d{2}|\d{6})', filename)
     if not match:
         raise ValueError(f"Filename {filename} does not match expected full-load pattern.")
