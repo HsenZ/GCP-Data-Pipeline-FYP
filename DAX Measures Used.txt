@@ -1,0 +1,68 @@
+The following are all 12 DAX Measures Used in the Power BI Dashboard of the Project
+
+
+1. Latest Daily Update = 
+    MAX ( V_FACT_Event[_DT_insertion_date] )
+
+
+2. Average Earthquake Magnitude = 
+    CALCULATE (
+    AVERAGE ( V_FACT_Event[VL_n_mag] ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "earthquake")
+
+
+3. Max Earthquake Depth = 
+    CALCULATE (
+    MAX ( V_FACT_Event[VL_n_depth] ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "earthquake")
+
+
+4. Max Earthquake Magnitude =
+    CALCULATE(
+    MAX(V_FACT_Event[VL_n_mag]),
+    V_DIM_Seismic_Activity_Type[LB_type] = "earthquake")
+
+
+5. Total Earthquakes = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "earthquake")
+
+
+6. Total Explosions = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "explosion")
+
+
+7. Total Ice Quakes = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "ice quake")
+
+
+8. Total Landslides = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "landslide")
+
+
+9. Total Quary Blasts = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "quarry blast")
+
+
+10. Total Sonic Booms = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "sonic boom")
+
+
+11. Total Volcanic Eruptions = 
+    CALCULATE (
+    COUNTROWS ( V_FACT_Event ),
+    V_DIM_Seismic_Activity_Type[LB_type] = "volcanic eruption")
+
+
+12. Total Seismic Events = COUNTROWS(V_FACT_Event)
