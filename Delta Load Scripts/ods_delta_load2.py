@@ -15,22 +15,16 @@ ODS_DATASET      = 'ODS_ds'
 ODS_TABLE        = 'ods_day_earthquake'        
 EEST             = pytz.timezone('Europe/Bucharest')
 
-MASK63 = 0x7FFFFFFFFFFFFFFF           # 2^63-1  (fits BigQuery INT64)
+MASK63 = 0x7FFFFFFFFFFFFFFF      
 is_updated = False
 
 def stable_id(time_str, lat_raw, lon_raw):
-    """
-    Deterministic 63-bit integer based on (time, latitude-str, longitude-str).
-    Works identically on every interpreter / runner instance.
-    """
+   # SHA-1 HASH
     key = f"{time_str}_{lat_raw}_{lon_raw}".encode("utf-8")
     return int(hashlib.sha1(key).hexdigest()[:16], 16) & MASK63
 
 def to_eest_datetime_str(iso_ts):
-    """
-    Convert ISO-8601 string (e.g. '2025-07-21T04:50:28.712Z')
-    to 'YYYY-MM-DD HH:MM:SS' in Europe/Bucharest time.
-    """
+   # timezone convertion
     try:
         dt = parser.isoparse(iso_ts)           
         dt = dt.astimezone(EEST)               
@@ -136,13 +130,13 @@ class TransformToODS(beam.DoFn):
                 'LB_magSource'       : self.clean(row.get('magSource')),
                 '_DT_insertion_date' : insertion_date,
                 '_DT_updated_date'   : updated_time if is_updated else None,
-                '_LB_job_execution_id': self.clean(row.get('job_execution_id')), # will be overwritten
+                '_LB_job_execution_id': self.clean(row.get('job_execution_id')), 
                 '_LB_data_source'    : self.clean(row.get('data_source'))
             }
         except Exception as e:
             logging.warning("Skipping row due to error: %s", e)
 
-#  Deduplicate step with metrics 
+#  Deduplicate step
 class DeduplicateById(beam.DoFn):
     def __init__(self):
         self.dup   = Metrics.counter('ods', 'rows_filtered')

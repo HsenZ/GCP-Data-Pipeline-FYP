@@ -28,8 +28,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 is_updated = False
-
-#  HELPERS 
+ 
 def assign_ids(elements, start_id=1):
     for idx, val in enumerate(sorted(elements), start=start_id):
         yield (val, idx)
@@ -66,7 +65,7 @@ def get_mag_description(name):
         'Great'   : '8 ≤ mag'
     }.get(name, f"Magnitude category: {name}")
 
-#  BigQuery utility — current max surrogate-key 
+#  BigQuery Surrogate key assihnement, current max surrogate-key 
 bq_client = bigquery.Client(project=PROJECT_ID)
 def _get_max_id(table_name, id_col):
     sql = f"SELECT MAX({id_col}) AS max_id FROM `{PROJECT_ID}.{DW_DATASET}.{table_name}`"
@@ -74,8 +73,6 @@ def _get_max_id(table_name, id_col):
     return row.max_id or 0 if row else 0
 
 def _ensure_staging_table():
-    """Create T_FACT_Events_staging with the same schema as T_FACT_Events
-       if it doesn't exist yet."""
     main_tbl_id = f"{PROJECT_ID}.{DW_DATASET}.T_FACT_Events"
     stage_tbl_id = f"{PROJECT_ID}.{DW_DATASET}.T_FACT_Events_staging"
     try:
